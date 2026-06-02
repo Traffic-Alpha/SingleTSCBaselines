@@ -11,7 +11,7 @@ Description: SOTL (Self-Organizing Traffic Light) 算法实现
 from typing import Dict, Any, List
 
 from tsc_algos.traditional.base_traditional import BaseTraditionalAgent
-from tsc_env.dynamic_tools import aggregate_features_seq
+from tsc_env.tools import aggregate_features_seq
 
 class SOTLAgent(BaseTraditionalAgent):
     """SOTL 自组织信号灯控制算法

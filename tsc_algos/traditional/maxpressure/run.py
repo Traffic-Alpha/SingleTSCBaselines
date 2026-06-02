@@ -1,9 +1,10 @@
 '''
 Author: WANG Maonan
 Date: 2026-04-21 10:35:14
-LastEditTime: 2026-04-21 12:52:54
-LastEditors: WANG Maonan
+@LastEditTime: 2026-06-02 22:56:20
+@LastEditors: Please set LastEditors
 Description: 运行 MaxPressure 获取仿真结果
+-> python run.py --junction Beijing_Beihuan --env_name normal_fluctuating_commuter --use_gui --min_green_steps 1 --max_green_steps 12
 '''
 import sys
 import argparse

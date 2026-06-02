@@ -11,7 +11,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrow
 from typing import Dict, List, Tuple, Any, Optional
 
-from .dynamic_tools import get_metric_value_range
+from .tools import get_metric_value_range
 
 
 def visualize_lane_features(

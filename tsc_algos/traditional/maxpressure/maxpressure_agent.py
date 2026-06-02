@@ -1,18 +1,18 @@
 '''
 @Author: WANG Maonan
+@Date: 2026-06-01 01:11:07
 @Description: MaxPressure 最大压力算法
 对每个 phase 计算 pressure = incoming_waiting - outgoing_waiting，选择 pressure 最大的 phase。
 当当前相位未达到最小绿灯步数时，强制保持当前相位，确保车辆有足够时间通过路口。
 当当前相位超过最大绿灯步数时，强制排除当前相位，避免绿灯长期无法切换。
+@LastEditTime: 2026-06-02 17:40:33
 '''
 from typing import Dict, Any, List, Optional
 from tsc_algos.traditional.base_traditional import BaseTraditionalAgent
-from tsc_env.dynamic_tools import aggregate_features_seq
-
+from tsc_env.tools import aggregate_features_seq
 
 # 速度阈值，低于此速度视为排队等待
 SPEED_THRESHOLD = 1.0  # m/s
-
 
 class MaxPressureAgent(BaseTraditionalAgent):
     """最大压力算法
@@ -30,7 +30,7 @@ class MaxPressureAgent(BaseTraditionalAgent):
         max_green_steps: 单个相位允许的最大连续绿灯决策步数，超过后强制切换
     """
 
-    def __init__(self, min_green_steps: int = 3, max_green_steps: int = 12):
+    def __init__(self, min_green_steps: int = 1, max_green_steps: int = 12):
         self.min_green_steps = min_green_steps
         self.max_green_steps = max_green_steps
         self.current_phase = 0

@@ -29,6 +29,10 @@ class BaseTraditionalAgent:
         """
         raise NotImplementedError
 
+    def _get_lane_dynamic_features_seq(self, obs):
+        """读取 TSCInfoWrapper 返回的 lane 动态特征序列。"""
+        return obs['lane_dynamic_features_seq']
+
     def run(self, env, num_episodes: int = 1):
         """运行算法
 
@@ -43,7 +47,7 @@ class BaseTraditionalAgent:
 
             while not done:
                 action = self.choose_action(
-                    lane_dynamic_features_seq=obs,
+                    lane_dynamic_features_seq=self._get_lane_dynamic_features_seq(obs),
                     static_lane_features=env.static_lane_features,
                 )
                 obs, reward, truncated, done, info = env.step(action)
