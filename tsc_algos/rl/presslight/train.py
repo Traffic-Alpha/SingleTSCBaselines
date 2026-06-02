@@ -2,7 +2,7 @@
 @Author: WANG Maonan
 @Description: PressLight 训练脚本
 -> python train.py --junction Beijing_Beihuan --env_name normal_fluctuating_commuter --num_envs 20 --reward_scale 0.1 --vec_env subproc --history_len 5
-@LastEditTime: 2026-06-02 22:53:25
+@LastEditTime: 2026-06-02 23:49:10
 '''
 import sys
 import argparse
@@ -20,7 +20,6 @@ from tshub.utils.get_abs_path import get_abs_path
 from tshub.utils.init_log import set_logger
 
 from tsc_algos.output_utils import generate_output_paths
-from tsc_algos.rl.utils.experiment_tracker import TrainingSummaryCallback
 from tsc_algos.rl.presslight.presslight_env.make_env import make_env
 from tsc_algos.rl.presslight.models import PressLightMovementModel
 from junction_configs import load_junction_config
@@ -129,26 +128,7 @@ if __name__ == '__main__':
         n_eval_episodes=5,
         deterministic=True,
     )
-    summary_callback = TrainingSummaryCallback(
-        summary_path=path_convert('../training_summary.csv'),
-        method='presslight',
-        junction=args.junction,
-        env_name=args.env_name,
-        total_timesteps=args.total_timesteps,
-        seed=args.seed,
-        eval_npz_path=path_convert('./eval/evaluations.npz'),
-        extra={
-            'trainer': 'DQN',
-            'num_envs': args.num_envs,
-            'vec_env': args.vec_env,
-            'episode_steps': args.episode_steps,
-            'reward_scale': args.reward_scale,
-            'history_len': args.history_len,
-            'reward_time_decay': args.reward_time_decay,
-            **dqn_params,
-        },
-    )
-    callback_list = CallbackList([checkpoint_callback, eval_callback, summary_callback])
+    callback_list = CallbackList([checkpoint_callback, eval_callback])
 
     # #########
     # Training
