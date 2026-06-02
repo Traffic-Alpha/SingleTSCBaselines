@@ -68,11 +68,11 @@ def load_junction_config(junction_name, env_name):
     # 例如 "easy_low_density" -> difficulty="easy"
     difficulty = env_name.split("_")[0]
     sumo_cfg = os.path.join(
-        _PROJECT_ROOT, "exp_junction", junction_name,
+        _PROJECT_ROOT, "junction_scenarios", junction_name,
         f"{env_name}.sumocfg"
     )
     net_file = os.path.join(
-        _PROJECT_ROOT, "exp_junction", junction_name,
+        _PROJECT_ROOT, "junction_scenarios", junction_name,
         "networks", f"{difficulty}.net.xml"
     )
 
