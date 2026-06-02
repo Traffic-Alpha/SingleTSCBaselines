@@ -1,16 +1,15 @@
 '''
 @Author: WANG Maonan
-@Description: TSC Info Wrapper - 精简版，只保留核心 wrapper 逻辑
+@Description: TSC Info Wrapper
 + reset 时提取静态特征、初始化动态管理器
-+ step 时收集完整子步序列，返回 List[Dict]
-LastEditTime: 2026-04-14 21:24:29
++ step 时收集完整子步序列，返回结构化 observation
+@LastEditTime: 2026-06-02 15:39:39
 '''
 import gymnasium as gym
 from gymnasium.core import Env
-from typing import Any, SupportsFloat, Tuple, Dict, List
+from typing import Any, SupportsFloat, Tuple, Dict
 
-from .dynamic_tools import LaneCellManager
-from .static_tools import extract_static_features
+from .tools import LaneCellManager, extract_static_features, extract_tls_dynamic_features
 
 
 
@@ -19,12 +18,12 @@ class TSCInfoWrapper(gym.Wrapper):
 
     公开属性（外部可直接访问）:
     - static_lane_features: 车道静态特征字典
-    - lane_dynamic_features: 最后一个子步的动态特征（便捷属性）
     - lane_dynamic_features_seq: 当前决策间隔内所有子步的特征序列
+    - tls_dynamic_features_seq: 当前决策间隔内所有子步的信号灯动态特征序列
     - lane_cell_manager: LaneCellManager 实例
     - lane_order: lane 排序列表
 
-    step() / reset() 均返回完整序列 List[Dict]，算法自行决定如何使用。
+    step() / reset() 均返回结构化 observation，包含 lane 和 tls 两类动态特征。
     """
     def __init__(self,
         env: Env,
@@ -38,8 +37,8 @@ class TSCInfoWrapper(gym.Wrapper):
 
         self.static_lane_features = None
         self.lane_cell_manager = None
-        self.lane_dynamic_features = None
         self.lane_dynamic_features_seq = None
+        self.tls_dynamic_features_seq = None
         self.lane_order = None
 
     def _build_lane_order(self):
@@ -52,15 +51,22 @@ class TSCInfoWrapper(gym.Wrapper):
         )
         return incoming + outgoing
 
-    def _update_dynamic_features(self, state):
-        """根据当前 state 计算一个子步的动态特征"""
+    def _extract_lane_dynamic_features(self, state):
+        """根据当前 state 计算一个子步的 cell-based 特征, 根据 cell 计算 lane 的特征"""
         phase_index_now = state['tls'][self.tls_id]['this_phase_index']
         return self.lane_cell_manager.calculate_lane_dynamic_features(
             vehicles_state=state['vehicle'],
             current_phase_index=phase_index_now
         )
 
-    def reset(self, seed=1) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    def _build_observation(self):
+        """构建结构化 observation，让 lane/tls 动态特征处于同一层级。"""
+        return {
+            'lane_dynamic_features_seq': self.lane_dynamic_features_seq,
+            'tls_dynamic_features_seq': self.tls_dynamic_features_seq,
+        }
+
+    def reset(self, seed=1) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """reset 时初始化静态信息和动态信息，返回长度为 1 的序列"""
         state = self.env.reset()
         self.steps = 0
@@ -77,30 +83,46 @@ class TSCInfoWrapper(gym.Wrapper):
         # 3. 确定 lane 排序
         self.lane_order = self._build_lane_order()
 
-        # 4. 计算初始动态特征，封装为序列
-        initial_features = self._update_dynamic_features(state)
-        self.lane_dynamic_features = initial_features
-        self.lane_dynamic_features_seq = [initial_features]
+        # 4. 计算初始 lane 动态特征，封装为序列
+        initial_lane_features = self._extract_lane_dynamic_features(state)
+        self.lane_dynamic_features_seq = [initial_lane_features]
 
-        return self.lane_dynamic_features_seq, {'step_time': 0}
+        # 5. 计算初始 tls 动态特征，封装为序列
+        initial_tls_features = extract_tls_dynamic_features(
+            state['tls'][self.tls_id],
+            initial_lane_features,
+        )
+        self.tls_dynamic_features_seq = [initial_tls_features]
 
-    def step(self, action: int) -> Tuple[List[Dict[str, Any]], SupportsFloat, bool, bool, Dict[str, Any]]:
+        return self._build_observation(), {'step_time': 0}
+
+    def step(self, action: int) -> Tuple[Dict[str, Any], SupportsFloat, bool, bool, Dict[str, Any]]:
         """执行一步环境交互，返回决策间隔内所有子步的特征序列"""
         can_perform_action = False
-        features_seq = []
+        lane_features_seq = []
+        tls_features_seq = []
         while not can_perform_action:
             action_dict = {self.tls_id: action}
             states, rewards, truncated, dones, infos = super().step(action_dict)
 
             self.steps += 1
             can_perform_action = states['tls'][self.tls_id]['can_perform_action']
-            features_seq.append(self._update_dynamic_features(states))
 
-        self.lane_dynamic_features_seq = features_seq
-        self.lane_dynamic_features = features_seq[-1]
+            # 提取 lane 的动态特征，封装为序列
+            lane_features = self._extract_lane_dynamic_features(states)
+            lane_features_seq.append(lane_features)
+
+            # 提取 tls 的动态特征，封装为序列
+            tls_features_seq.append(extract_tls_dynamic_features(
+                states['tls'][self.tls_id],
+                lane_features,
+            ))
+
+        self.lane_dynamic_features_seq = lane_features_seq
+        self.tls_dynamic_features_seq = tls_features_seq
 
         infos['step_time'] = self.steps
-        return self.lane_dynamic_features_seq, rewards, truncated, dones, infos
+        return self._build_observation(), rewards, truncated, dones, infos
 
     def close(self) -> None:
         return super().close()

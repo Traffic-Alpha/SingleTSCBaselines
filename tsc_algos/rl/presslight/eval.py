@@ -1,0 +1,80 @@
+'''
+@Author: WANG Maonan
+@Date: 2026-06-01 01:11:07
+@Description: PressLight 评估脚本
+% python eval.py --junction Beijing_Beihuan --env_name normal_fluctuating_commuter --history_len 5
+@LastEditTime: 2026-06-02 22:53:13
+'''
+import sys
+import argparse
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+import torch
+from loguru import logger
+from tshub.utils.get_abs_path import get_abs_path
+
+from stable_baselines3 import DQN
+from stable_baselines3.common.vec_env import DummyVecEnv
+
+from junction_loader import load_junction_config
+from tsc_algos.rl.presslight.presslight_env.make_env import make_env
+from tsc_algos.output_utils import generate_output_paths
+
+path_convert = get_abs_path(__file__)
+logger.remove()
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='PressLight 评估')
+    parser.add_argument('--junction', type=str, default='Beijing_Beihuan',
+                        help='路口名称')
+    parser.add_argument('--env_name', type=str, default='easy_low_density',
+                        help='环境名称，如 easy_low_density')
+    parser.add_argument('--history_len', type=int, default=4,
+                        help='PressLight state/reward 使用的历史帧数，需与训练模型一致')
+    parser.add_argument('--reward_time_decay', type=float, default=1.0,
+                        help='pressure reward 时间衰减，需与训练模型一致')
+    args = parser.parse_args()
+
+    cfg = load_junction_config(args.junction, args.env_name)
+    trip_info, fcd_output = generate_output_paths(args.junction, args.env_name, "presslight")
+
+    # #########
+    # Init Env
+    # #########
+    log_path = path_convert('./log/')
+    params = {
+        'tls_id': cfg['tls_id'],
+        'num_seconds': cfg['num_seconds'],
+        'num_phases': cfg['num_phases'],
+        'sumo_cfg': cfg['sumo_cfg'],
+        'net_file': cfg['net_file'],
+        'use_gui': True, # 测试环境打开 GUI 以便观察
+        'log_file': log_path,
+        'history_len': args.history_len,
+        'reward_time_decay': args.reward_time_decay,
+        'trip_info': trip_info,
+        'fcd_output': fcd_output,
+    }
+    env = DummyVecEnv([make_env(env_index='0', **params)])
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model_path = path_convert('./models/rl_model_300000_steps.zip')
+    model = DQN.load(model_path, env=env, device=device)
+
+    # 使用模型进行测试
+    obs = env.reset()
+    dones = False
+    total_reward = 0
+
+    while not dones:
+        action, _state = model.predict(obs, deterministic=True)
+        obs, rewards, dones, infos = env.step(action)
+        total_reward += rewards
+
+    env.close()
+    print(f'累积奖励为, {total_reward}.')
