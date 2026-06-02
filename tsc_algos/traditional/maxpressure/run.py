@@ -17,7 +17,7 @@ from tshub.utils.get_abs_path import get_abs_path
 from tsc_algos.traditional.maxpressure.make_env import make_env
 from tsc_algos.traditional.maxpressure.maxpressure_agent import MaxPressureAgent
 from tsc_algos.output_utils import generate_output_paths
-from junction_configs.loader import load_junction_config
+from junction_configs import load_junction_config
 
 path_convert = get_abs_path(__file__)
 

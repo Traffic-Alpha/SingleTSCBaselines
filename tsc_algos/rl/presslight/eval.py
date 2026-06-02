@@ -21,7 +21,7 @@ from tshub.utils.get_abs_path import get_abs_path
 from stable_baselines3 import DQN
 from stable_baselines3.common.vec_env import DummyVecEnv
 
-from junction_configs.loader import load_junction_config
+from junction_configs import load_junction_config
 from tsc_algos.rl.presslight.presslight_env.make_env import make_env
 from tsc_algos.output_utils import generate_output_paths
 
