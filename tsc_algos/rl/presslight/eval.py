@@ -2,8 +2,8 @@
 @Author: WANG Maonan
 @Date: 2026-06-01 01:11:07
 @Description: PressLight 评估脚本
-% python eval.py --junction Beijing_Beihuan --env_name normal_fluctuating_commuter --history_len 5
-@LastEditTime: 2026-06-02 22:53:13
+-> python eval.py --junction Beijing_Beihuan --env_name normal_fluctuating_commuter --history_len 5
+@LastEditTime: 2026-06-03 22:13:19
 '''
 import sys
 import argparse
@@ -34,7 +34,7 @@ if __name__ == '__main__':
                         help='路口名称')
     parser.add_argument('--env_name', type=str, default='easy_low_density',
                         help='环境名称，如 easy_low_density')
-    parser.add_argument('--history_len', type=int, default=4,
+    parser.add_argument('--history_len', type=int, default=5,
                         help='PressLight state/reward 使用的历史帧数，需与训练模型一致')
     parser.add_argument('--reward_time_decay', type=float, default=1.0,
                         help='pressure reward 时间衰减，需与训练模型一致')
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     env = DummyVecEnv([make_env(env_index='0', **params)])
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model_path = path_convert('./models/rl_model_300000_steps.zip')
+    model_path = path_convert(f'./models/{args.junction}_{args.env_name}/best_model.zip')
     model = DQN.load(model_path, env=env, device=device)
 
     # 使用模型进行测试

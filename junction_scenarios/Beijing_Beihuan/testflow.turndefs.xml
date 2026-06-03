@@ -1,0 +1,142 @@
+<turns>
+    <interval begin="0" end="60.0">
+        <edgeRelation from="-1106233488.150" to="-157863208#1" probability="50" />
+        <edgeRelation from="-1106233488.150" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="1106233488" probability="50" />
+        <edgeRelation from="252712271#0.589" to="-157863208#1" probability="50" />
+        <edgeRelation from="252712271#0.589" to="1106233488" probability="50" />
+        <edgeRelation from=":INT1_0" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_1" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_2" to="-157863208#1" probability="100" />
+        <edgeRelation from=":INT1_3" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_4" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_5" to="-157863208#1" probability="100" />
+    </interval>
+    <interval begin="60.0" end="120.0">
+        <edgeRelation from="-1106233488.150" to="-157863208#1" probability="50" />
+        <edgeRelation from="-1106233488.150" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="1106233488" probability="50" />
+        <edgeRelation from="252712271#0.589" to="-157863208#1" probability="50" />
+        <edgeRelation from="252712271#0.589" to="1106233488" probability="50" />
+        <edgeRelation from=":INT1_0" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_1" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_2" to="-157863208#1" probability="100" />
+        <edgeRelation from=":INT1_3" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_4" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_5" to="-157863208#1" probability="100" />
+    </interval>
+    <interval begin="120.0" end="180.0">
+        <edgeRelation from="-1106233488.150" to="-157863208#1" probability="50" />
+        <edgeRelation from="-1106233488.150" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="1106233488" probability="50" />
+        <edgeRelation from="252712271#0.589" to="-157863208#1" probability="50" />
+        <edgeRelation from="252712271#0.589" to="1106233488" probability="50" />
+        <edgeRelation from=":INT1_0" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_1" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_2" to="-157863208#1" probability="100" />
+        <edgeRelation from=":INT1_3" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_4" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_5" to="-157863208#1" probability="100" />
+    </interval>
+    <interval begin="180.0" end="240.0">
+        <edgeRelation from="-1106233488.150" to="-157863208#1" probability="50" />
+        <edgeRelation from="-1106233488.150" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="1106233488" probability="50" />
+        <edgeRelation from="252712271#0.589" to="-157863208#1" probability="50" />
+        <edgeRelation from="252712271#0.589" to="1106233488" probability="50" />
+        <edgeRelation from=":INT1_0" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_1" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_2" to="-157863208#1" probability="100" />
+        <edgeRelation from=":INT1_3" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_4" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_5" to="-157863208#1" probability="100" />
+    </interval>
+    <interval begin="240.0" end="300.0">
+        <edgeRelation from="-1106233488.150" to="-157863208#1" probability="50" />
+        <edgeRelation from="-1106233488.150" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="1106233488" probability="50" />
+        <edgeRelation from="252712271#0.589" to="-157863208#1" probability="50" />
+        <edgeRelation from="252712271#0.589" to="1106233488" probability="50" />
+        <edgeRelation from=":INT1_0" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_1" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_2" to="-157863208#1" probability="100" />
+        <edgeRelation from=":INT1_3" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_4" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_5" to="-157863208#1" probability="100" />
+    </interval>
+    <interval begin="300.0" end="360.0">
+        <edgeRelation from="-1106233488.150" to="-157863208#1" probability="50" />
+        <edgeRelation from="-1106233488.150" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="1106233488" probability="50" />
+        <edgeRelation from="252712271#0.589" to="-157863208#1" probability="50" />
+        <edgeRelation from="252712271#0.589" to="1106233488" probability="50" />
+        <edgeRelation from=":INT1_0" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_1" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_2" to="-157863208#1" probability="100" />
+        <edgeRelation from=":INT1_3" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_4" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_5" to="-157863208#1" probability="100" />
+    </interval>
+    <interval begin="360.0" end="420.0">
+        <edgeRelation from="-1106233488.150" to="-157863208#1" probability="50" />
+        <edgeRelation from="-1106233488.150" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="1106233488" probability="50" />
+        <edgeRelation from="252712271#0.589" to="-157863208#1" probability="50" />
+        <edgeRelation from="252712271#0.589" to="1106233488" probability="50" />
+        <edgeRelation from=":INT1_0" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_1" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_2" to="-157863208#1" probability="100" />
+        <edgeRelation from=":INT1_3" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_4" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_5" to="-157863208#1" probability="100" />
+    </interval>
+    <interval begin="420.0" end="480.0">
+        <edgeRelation from="-1106233488.150" to="-157863208#1" probability="50" />
+        <edgeRelation from="-1106233488.150" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="1106233488" probability="50" />
+        <edgeRelation from="252712271#0.589" to="-157863208#1" probability="50" />
+        <edgeRelation from="252712271#0.589" to="1106233488" probability="50" />
+        <edgeRelation from=":INT1_0" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_1" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_2" to="-157863208#1" probability="100" />
+        <edgeRelation from=":INT1_3" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_4" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_5" to="-157863208#1" probability="100" />
+    </interval>
+    <interval begin="480.0" end="540.0">
+        <edgeRelation from="-1106233488.150" to="-157863208#1" probability="50" />
+        <edgeRelation from="-1106233488.150" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="1106233488" probability="50" />
+        <edgeRelation from="252712271#0.589" to="-157863208#1" probability="50" />
+        <edgeRelation from="252712271#0.589" to="1106233488" probability="50" />
+        <edgeRelation from=":INT1_0" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_1" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_2" to="-157863208#1" probability="100" />
+        <edgeRelation from=":INT1_3" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_4" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_5" to="-157863208#1" probability="100" />
+    </interval>
+    <interval begin="540.0" end="600.0">
+        <edgeRelation from="-1106233488.150" to="-157863208#1" probability="50" />
+        <edgeRelation from="-1106233488.150" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="-252712271#1" probability="50" />
+        <edgeRelation from="157863208#0.1590" to="1106233488" probability="50" />
+        <edgeRelation from="252712271#0.589" to="-157863208#1" probability="50" />
+        <edgeRelation from="252712271#0.589" to="1106233488" probability="50" />
+        <edgeRelation from=":INT1_0" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_1" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_2" to="-157863208#1" probability="100" />
+        <edgeRelation from=":INT1_3" to="-252712271#1" probability="100" />
+        <edgeRelation from=":INT1_4" to="1106233488" probability="100" />
+        <edgeRelation from=":INT1_5" to="-157863208#1" probability="100" />
+    </interval>
+</turns>

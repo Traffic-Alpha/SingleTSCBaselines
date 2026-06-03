@@ -2,7 +2,7 @@
 @Author: WANG Maonan
 @Date: 2026-06-02 16:39:14
 @Description: PressLight reward functions
-@LastEditTime: 2026-06-02 21:52:31
+@LastEditTime: 2026-06-03 21:02:50
 '''
 from typing import Any, Dict, List
 
@@ -12,8 +12,6 @@ def movement_pressure_penalty(movement_features: List[Dict[str, Any]]) -> float:
     pressure_penalty = 0.0
     controllable_count = 0
     for movement in movement_features:
-        if not movement.get('is_controllable', bool(movement.get('phase_indices'))):
-            continue
         pressure_penalty += abs(movement['pressure'])
         controllable_count += 1
 

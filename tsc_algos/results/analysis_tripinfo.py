@@ -14,10 +14,8 @@ current_file_path = get_abs_path(__file__)
 set_logger(current_file_path('./'), file_log_level="INFO")
 
 tripinfos = [
-    "./fixtime/Beijing_Beihuan_easy_high_density_20260421_113408/trip_info.xml",
-    "./maxpressure/Beijing_Beihuan_easy_high_density_20260421_125258/trip_info.xml",
-    "./sotl/Beijing_Beihuan_easy_high_density_20260421_113446/trip_info.xml",
-    "./webster/Beijing_Beihuan_easy_high_density_20260421_113505/trip_info.xml"
+    "./presslight/Beijing_Beihuan_normal_fluctuating_commuter/trip_info.xml",
+    "./maxpressure/Beijing_Beihuan_normal_fluctuating_commuter/trip_info.xml",
 ]
 
 for _tripinfo in tripinfos:
