@@ -35,6 +35,11 @@
 
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
     <vType id="background" length="5.00" color="220,220,220" tau="1.0"/>
+    <vType id="police" guiShape="police" length="5.00" maxSpeed="20.00" speedFactor="1.5" color="0,80,255"/>
+    <vType id="emergency" guiShape="emergency" length="6.50" maxSpeed="20.00" speedFactor="1.5" color="255,255,255"/>
+    <vType id="fire_engine" guiShape="firebrigade" length="8.00" maxSpeed="20.00" speedFactor="1.5" color="255,0,0"/>
+    <vType id="barrier" length="1.00" maxSpeed="0.10" color="255,128,0" tau="1.0"/>
+    <vType id="ego" length="5.00" maxSpeed="17.00" color="0,200,0" tau="1.0"/>
     <vehicle id="525074961#6__0__background.0" type="background" depart="0.03" departLane="random">
         <route edges="525074961#6 525074961#10 525074961#11"/>
     </vehicle>
