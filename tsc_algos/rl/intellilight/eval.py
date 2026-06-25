@@ -67,7 +67,7 @@ if __name__ == '__main__':
     env = DummyVecEnv([make_env(env_index='0', **params)])
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model_path = path_convert(f'./checkpoints/{args.junction}_{args.env_name}/last_rl_model.zip')
+    model_path = path_convert(f'./checkpoints/{args.junction}_{args.env_name}/{args.junction}_{args.env_name}.zip')
     _ = IntelliLightMovementModel  # 确保自定义特征提取器类可被 SB3 加载
     model = DQN.load(model_path, env=env, device=device)
 

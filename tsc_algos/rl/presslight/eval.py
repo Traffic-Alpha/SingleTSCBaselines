@@ -4,7 +4,7 @@
 @Description: PressLight 评估脚本
 -> python eval.py --junction Beijing_Beihuan --env_name normal_increasing_demand \
     --history_len 5 --event_name event_1 --gui
-@LastEditTime: 2026-06-25 18:59:39
+@LastEditTime: 2026-06-26 00:36:35
 '''
 import sys
 import argparse
@@ -75,7 +75,7 @@ if __name__ == '__main__':
     env = DummyVecEnv([make_env(env_index='0', **params)])
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model_path = path_convert(f'./checkpoints/{args.junction}_{args.env_name}/last_rl_model.zip')
+    model_path = path_convert(f'./checkpoints/{args.junction}_{args.env_name}/{args.junction}_{args.env_name}.zip')
     model = DQN.load(model_path, env=env, device=device)
 
     # 使用模型进行测试

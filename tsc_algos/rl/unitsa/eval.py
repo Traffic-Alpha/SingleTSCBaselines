@@ -2,7 +2,7 @@
 @Author: WANG Maonan
 @Description: UniTSA 评估脚本（PPO 版本）
 -> python eval.py --junction Beijing_Beihuan --env_name normal_increasing_demand --history_len 5 --gui
-@LastEditTime: 2026-06-25 16:18:10
+@LastEditTime: 2026-06-26 00:36:42
 '''
 import sys
 import argparse
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     env = DummyVecEnv([make_env(env_index='0', **params)])
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model_path = path_convert(f'./checkpoints/{args.junction}_{args.env_name}/last_rl_model.zip')
+    model_path = path_convert(f'./checkpoints/{args.junction}_{args.env_name}/{args.junction}_{args.env_name}.zip')
     _ = UniTSAMovementTransformer  # 确保自定义特征提取器类可被 SB3 加载
     model = PPO.load(model_path, env=env, device=device)
 
