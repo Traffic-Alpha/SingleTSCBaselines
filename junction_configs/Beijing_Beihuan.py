@@ -1,9 +1,9 @@
 '''
 Author: WANG Maonan
 Date: 2026-04-14 14:42:21
-@LastEditTime: 2026-06-25 19:24:01
-@LastEditors: Please set LastEditors
 Description: 北京北环路口配置
+@LastEditTime: 2026-06-25 22:45:52
+@LastEditors: WANG Maonan
 '''
 
 JUNCTION = {
