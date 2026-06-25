@@ -1,9 +1,10 @@
 '''
 Author: WANG Maonan
 Date: 2026-04-13 20:30:54
-LastEditTime: 2026-04-14 21:32:05
+@LastEditTime: 2026-06-25 19:41:27
 Description: FixTime 运行入口, 可以控制相位持续时间
--> python run.py --junction Beijing_Beihuan --env_name easy_high_density
+-> python run.py --junction Beijing_Beihuan \
+    --env_name easy_high_density --use_gui --event_name event_1
 '''
 import sys
 import argparse
@@ -15,7 +16,7 @@ if str(project_root) not in sys.path:
 from loguru import logger
 from tshub.utils.get_abs_path import get_abs_path
 
-from junction_configs import load_junction_config
+from junction_configs import load_junction_config, load_event_config
 from tsc_algos.output_utils import generate_output_paths
 from tsc_algos.traditional.fixtime.make_env import make_env
 from tsc_algos.traditional.fixtime.fixtime_agent import FixTimeAgent
@@ -31,14 +32,21 @@ if __name__ == '__main__':
                         help='环境名称，如 easy_low_density')
     parser.add_argument('--use_gui', action='store_true', default=True,
                         help='是否开启 GUI')
+    parser.add_argument('--event_name', type=str, default='',
+                        help='特殊事件集合名称（定义在 junction_configs 的 EVENTS 中，如 event_1）；为空则不注入事件')
     args = parser.parse_args()
 
     cfg = load_junction_config(args.junction, args.env_name)
 
     trip_info, fcd_output = generate_output_paths(
-        junction=args.junction, 
-        env_name=args.env_name, 
+        junction=args.junction,
+        env_name=args.env_name,
         algo_name="fixtime"
+    )
+
+    # 特殊事件配置（来自路口配置文件的 EVENTS 字典）
+    accident_configs, special_vehicle_configs = (
+        load_event_config(args.junction, args.event_name) if args.event_name else ([], [])
     )
 
     env = make_env(
@@ -47,6 +55,8 @@ if __name__ == '__main__':
         use_gui=args.use_gui,
         trip_info=trip_info,
         fcd_output=fcd_output,
+        accident_configs=accident_configs,
+        special_vehicle_configs=special_vehicle_configs,
     )
     agent = FixTimeAgent(
         num_phases=cfg['num_phases'],

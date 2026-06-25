@@ -34,7 +34,13 @@
 -->
 
 <routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/routes_file.xsd">
-    <vType id="background" length="5.00" color="220,220,220" tau="1.0"/>
+    <vType id="background" length="4.50" maxSpeed="15.00" color="yellow" tau="1.0"/>
+    <vType id="rescue" guiShape="emergency" speedFactor="1.5"/>
+    <vType id="ambulance" guiShape="emergency" color="255,40,40" maxSpeed="20.00" speedFactor="1.5"/>
+    <vType id="parked_car" length="4.50" maxSpeed="0.10" color="80,80,80" tau="1.0"/>
+    <vType id="barrier" length="1.00" maxSpeed="0.10" color="255,80,40" tau="1.0"/>
+    <vType id="ego" length="4.50" maxSpeed="17.00" color="yellow" tau="1.0"/>
+    
     <vehicle id="-1106233488.150__0__background.0" type="background" depart="0.03" departLane="random">
         <route edges="-1106233488.150 -157863208#1"/>
     </vehicle>

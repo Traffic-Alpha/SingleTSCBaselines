@@ -16,7 +16,7 @@ if str(project_root) not in sys.path:
 from loguru import logger
 from tshub.utils.get_abs_path import get_abs_path
 
-from junction_configs import load_junction_config
+from junction_configs import load_junction_config, load_event_config
 from tsc_algos.output_utils import generate_output_paths
 from tsc_algos.traditional.sotl.make_env import make_env
 from tsc_algos.traditional.sotl.sotl_agent import SOTLAgent
@@ -36,11 +36,18 @@ if __name__ == '__main__':
                         help='SOTL 切换阈值')
     parser.add_argument('--max_green_steps', type=int, default=12,
                         help='单个相位最大连续绿灯决策步数')
+    parser.add_argument('--event_name', type=str, default='',
+                        help='特殊事件集合名称（定义在 junction_configs 的 EVENTS 中，如 event_1）；为空则不注入事件')
     args = parser.parse_args()
 
     cfg = load_junction_config(args.junction, args.env_name)
 
     trip_info, fcd_output = generate_output_paths(args.junction, args.env_name, "sotl")
+
+    # 特殊事件配置（来自路口配置文件的 EVENTS 字典）
+    accident_configs, special_vehicle_configs = (
+        load_event_config(args.junction, args.event_name) if args.event_name else ([], [])
+    )
 
     env = make_env(
         sumo_cfg=cfg['sumo_cfg'],
@@ -50,6 +57,8 @@ if __name__ == '__main__':
         use_gui=args.use_gui,
         trip_info=trip_info,
         fcd_output=fcd_output,
+        accident_configs=accident_configs,
+        special_vehicle_configs=special_vehicle_configs,
     )
     agent = SOTLAgent(num_phases=cfg['num_phases'], threshold=args.threshold, max_green_steps=args.max_green_steps)
     agent.run(env, num_episodes=1)

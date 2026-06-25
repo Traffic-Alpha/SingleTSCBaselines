@@ -29,6 +29,21 @@ AVAILABLE_JUNCTIONS = [
 ]
 
 
+def _load_module(junction_name):
+    """导入路口配置模块, 供 load_junction_config / load_event_config 共用。"""
+    if junction_name not in AVAILABLE_JUNCTIONS:
+        raise ValueError(
+            f"未知路口 '{junction_name}'，可用路口: {AVAILABLE_JUNCTIONS}"
+        )
+    try:
+        return importlib.import_module(f"junction_configs.{junction_name}")
+    except ModuleNotFoundError:
+        raise ValueError(
+            f"找不到路口配置文件 'junction_configs/{junction_name}.py'，"
+            f"请确认该文件存在。"
+        )
+
+
 def load_junction_config(junction_name, env_name):
     """加载路口配置，返回环境参数字典
 
@@ -39,20 +54,7 @@ def load_junction_config(junction_name, env_name):
     Returns:
         dict: {sumo_cfg, net_file, tls_id, num_phases, num_seconds, fix_phase_durations}
     """
-    if junction_name not in AVAILABLE_JUNCTIONS:
-        raise ValueError(
-            f"未知路口 '{junction_name}'，可用路口: {AVAILABLE_JUNCTIONS}"
-        )
-
-    try:
-        config_module = importlib.import_module(f"junction_configs.{junction_name}")
-    except ModuleNotFoundError:
-        raise ValueError(
-            f"找不到路口配置文件 'junction_configs/{junction_name}.py'，"
-            f"请确认该文件存在。"
-        )
-
-    junc_cfg = config_module.JUNCTION
+    junc_cfg = _load_module(junction_name).JUNCTION
     tls_id = junc_cfg["tls_id"]
 
     if env_name not in junc_cfg:
@@ -84,3 +86,27 @@ def load_junction_config(junction_name, env_name):
         "num_seconds": env_cfg["num_seconds"], # 仿真持续时间
         "fix_phase_durations": env_cfg.get("fix_phase_durations"), # 固定配时间设置
     }
+
+
+def load_event_config(junction_name, event_name):
+    """加载特殊事件配置 (定义在路口配置文件的 EVENTS 字典中)。
+
+    Args:
+        junction_name: 路口名称，如 "Beijing_Beihuan"
+        event_name: EVENTS 中的事件集合名称，如 "demo"
+
+    Returns:
+        (accident_configs, special_vehicle_configs): 两个列表
+    """
+    config_module = _load_module(junction_name)
+    events = getattr(config_module, "EVENTS", {})
+
+    if event_name not in events:
+        available = list(events.keys())
+        raise ValueError(
+            f"路口 '{junction_name}' 没有事件集合 '{event_name}'，"
+            f"可用事件: {available}（在 junction_configs/{junction_name}.py 的 EVENTS 中定义）"
+        )
+
+    event_cfg = events[event_name]
+    return event_cfg.get("accidents", []), event_cfg.get("special_vehicles", [])
