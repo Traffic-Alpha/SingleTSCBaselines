@@ -3,7 +3,7 @@
 @Description: UniTSA 训练脚本（PPO 版本）
 -> python train.py --junction Beijing_Beihuan --env_name normal_increasing_demand \
      --num_envs 20 --reward_scale 0.1 --vec_env subproc --history_len 5
-@LastEditTime: 2026-06-25 15:12:17
+@LastEditTime: 2026-06-26 00:24:40
 '''
 import sys
 import argparse
@@ -61,9 +61,9 @@ if __name__ == '__main__':
                         help='PPO 策略熵正则系数（需配合 share_features_extractor=False）。'
                              '设 0 时确定性策略会间歇塌缩(eval 抖动)；过大(如 0.01)又可能'
                              '压住本任务较弱的 advantage 信号。0.005 作为熵下限既防塌缩又不压学习。')
-    parser.add_argument('--reward_scale', type=float, default=0.01,
+    parser.add_argument('--reward_scale', type=float, default=0.1,
                         help='训练 reward 缩放系数')
-    parser.add_argument('--history_len', type=int, default=4,
+    parser.add_argument('--history_len', type=int, default=5,
                         help='UniTSA state/reward 使用的历史帧数')
     parser.add_argument('--features_dim', type=int, default=128,
                         help='policy 接收的特征维度')
@@ -181,7 +181,7 @@ if __name__ == '__main__':
     )
     model.learn(total_timesteps=args.total_timesteps, tb_log_name=args.junction, callback=callback_list)
 
-    model.save(f'{model_path}/last_rl_model.zip')
+    model.save(f'{model_path}/{args.junction}_{args.env_name}.zip')
     env.save(f'{model_path}/vec_normalize.pkl')  # 仅用于复现/续训，eval.py 不需要
     print('训练结束, 达到最大步数.')
 

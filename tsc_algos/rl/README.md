@@ -2,7 +2,7 @@
  * @Author: WANG Maonan
  * @Date: 2026-06-01 22:02:34
  * @Description: RL-based TSC Methods
- * @LastEditTime: 2026-06-24 19:19:42
+ * @LastEditTime: 2026-06-25 21:17:32
 -->
 # RL Methods
 
@@ -11,7 +11,7 @@
 - `presslight`: DQN + movement-level state + choose-next-phase action + pressure reward。
 - `attendlight`: 独立环境代码复制自 `presslight` 的 state/action/reward 设计，只将特征提取器替换为 movement-token Transformer。
 - `unitsa`: 和 `attendlight` 相比, 将代码替换为 PPO, action 使用 `next or not`, reward 使用 waiting time
-- `intelligent`: DQN + movement-level state + choose-next-phase action + waiting time reward (vecnorm)。
+- `intellilight`: DQN + movement-level state + choose-next-phase action + waiting time reward (vecnorm)。
 
 ### PressLight
 

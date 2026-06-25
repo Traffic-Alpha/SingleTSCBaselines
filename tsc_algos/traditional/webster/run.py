@@ -1,8 +1,8 @@
 '''
 Author: WANG Maonan
 Date: 2026-04-21 10:31:31
-LastEditTime: 2026-04-21 11:00:07
-LastEditors: WANG Maonan
+@LastEditTime: 2026-06-26 00:01:39
+@LastEditors: WANG Maonan
 Description: 运行 Webster 信号控制算法
 '''
 import argparse
@@ -27,7 +27,7 @@ if __name__ == '__main__':
                         help='路口名称')
     parser.add_argument('--env_name', type=str, default='easy_low_density',
                         help='环境名称，如 easy_low_density')
-    parser.add_argument('--use_gui', action='store_true', default=True,
+    parser.add_argument('--use_gui', action='store_true', default=False,
                         help='是否开启 GUI')
     parser.add_argument('--event_name', type=str, default='',
                         help='特殊事件集合名称（定义在 junction_configs 的 EVENTS 中，如 event_1）；为空则不注入事件')

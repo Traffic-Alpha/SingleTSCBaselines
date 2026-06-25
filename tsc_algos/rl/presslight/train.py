@@ -3,7 +3,7 @@
 @Description: PressLight 训练脚本
 -> python train.py --junction Beijing_Beihuan --env_name normal_increasing_demand \
     --num_envs 20 --reward_scale 0.1 --vec_env subproc --history_len 5
-@LastEditTime: 2026-06-25 15:11:55
+@LastEditTime: 2026-06-26 00:29:40
 '''
 import sys 
 import argparse
@@ -55,7 +55,7 @@ if __name__ == '__main__':
                         help='单次仿真大约包含的 RL 交互步数，用于派生 DQN 更新节奏')
     parser.add_argument('--reward_scale', type=float, default=0.01,
                         help='训练 reward 缩放系数')
-    parser.add_argument('--history_len', type=int, default=4,
+    parser.add_argument('--history_len', type=int, default=5,
                         help='PressLight state/reward 使用的历史帧数')
     parser.add_argument('--reward_time_decay', type=float, default=1.0,
                         help='pressure reward 时间衰减；1.0 表示历史帧等权')
@@ -158,7 +158,7 @@ if __name__ == '__main__':
     # #################
     # 保存 model 和 env
     # #################
-    model.save(f'{model_path}/last_rl_model.zip')
+    model.save(f'{model_path}/{args.junction}_{args.env_name}.zip')
     print('训练结束, 达到最大步数.')
 
     env.close()

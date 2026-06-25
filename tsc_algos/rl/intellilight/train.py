@@ -149,7 +149,7 @@ if __name__ == '__main__':
     )
     model.learn(total_timesteps=args.total_timesteps, tb_log_name=args.junction, callback=callback_list)
 
-    model.save(f'{model_path}/last_rl_model.zip')
+    model.save(f'{model_path}/{args.junction}_{args.env_name}.zip')
     env.save(f'{model_path}/vec_normalize.pkl')  # 仅用于复现/续训，eval.py 不需要
     print('训练结束, 达到最大步数.')
 

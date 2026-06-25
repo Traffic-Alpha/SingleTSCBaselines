@@ -3,7 +3,7 @@
 @Description: AttendLight 训练脚本
 -> python train.py --junction Beijing_Beihuan --env_name normal_increasing_demand \
     --num_envs 20 --reward_scale 0.1 --vec_env subproc --history_len 5
-@LastEditTime: 2026-06-24 22:41:26
+@LastEditTime: 2026-06-26 00:23:41
 '''
 import sys
 import argparse
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     )
     model.learn(total_timesteps=args.total_timesteps, tb_log_name=args.junction, callback=callback_list)
 
-    model.save(f'{model_path}/last_rl_model.zip')
+    model.save(f'{model_path}/{args.junction}_{args.env_name}.zip')
     print('训练结束, 达到最大步数.')
 
     env.close()

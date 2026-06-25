@@ -1,8 +1,13 @@
 <!--
  * @Author: WANG Maonan
  * @Date: 2026-01-10 17:05:12
- * @Description: Single-intersection TSC baselines built on TransSimHub + SUMO
- * @LastEditTime: 2026-06-25 20:03:05
+ * @Description: Single-intersection TSC baselines built on TransSimHub
+TODO
+1. 把 12 个环境的 config 全部完成修改
+2. 12 个环境的传统算法测试完成 easy + normal 全部测试 (目的确保 config 是正确的)
+3. 首页 README 进行修改, 不需要这么详细, 更多是结果展示
+4. 首页展示一下这 12 个路口的场景 (SUMO + 卫星)
+ * @LastEditTime: 2026-06-25 23:39:16
 -->
 # Single-Intersection Traffic Signal Control Baselines
 
@@ -61,6 +66,8 @@ assets/                       # Figures and traffic-flow analysis helpers
 ```
 
 ## Algorithms
+
+Note: 这里对原始算法有的进行了一些修改，我们这里都按照 movement 的信息而不是 lane 的信息作为 state
 
 ### Traditional
 
@@ -175,7 +182,7 @@ If you find this work helpful, please consider citing the papers below.
 
 ### LLM / VLM-based TSC
 
-```
+```bibtex
 @article{wang2024llm,
   title={LLM-Assisted Light: Leveraging Large Language Model Capabilities for Human-Mimetic Traffic Signal Control in Complex Urban Environments},
   author={Wang, Maonan and Pang, Aoyu and Kan, Yuheng and Pun, Man-On and Chen, Chung Shue and Huang, Bo},
@@ -209,7 +216,7 @@ If you find this work helpful, please consider citing the papers below.
 
 ### RL-based TSC
 
-```
+```bibtex
 @ARTICLE{wang2024unitsa,
   author={Wang, Maonan and Xiong, Xi and Kan, Yuheng and Xu, Chengcheng and Pun, Man-On},
   journal={IEEE Transactions on Vehicular Technology}, 

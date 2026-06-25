@@ -1,7 +1,7 @@
 '''
 Author: WANG Maonan
 Date: 2026-04-13 20:30:54
-@LastEditTime: 2026-06-25 19:41:27
+@LastEditTime: 2026-06-26 00:01:17
 Description: FixTime 运行入口, 可以控制相位持续时间
 -> python run.py --junction Beijing_Beihuan \
     --env_name easy_high_density --use_gui --event_name event_1
@@ -30,7 +30,7 @@ if __name__ == '__main__':
                         help='路口名称')
     parser.add_argument('--env_name', type=str, default='easy_low_density',
                         help='环境名称，如 easy_low_density')
-    parser.add_argument('--use_gui', action='store_true', default=True,
+    parser.add_argument('--use_gui', action='store_true', default=False,
                         help='是否开启 GUI')
     parser.add_argument('--event_name', type=str, default='',
                         help='特殊事件集合名称（定义在 junction_configs 的 EVENTS 中，如 event_1）；为空则不注入事件')
