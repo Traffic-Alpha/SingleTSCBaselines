@@ -34,9 +34,9 @@ class TSCEnvironment(gym.Env):
             tls_action_type=tls_action_type,
             use_gui=use_gui,
             is_libsumo=(not use_gui), # 如果不开界面, 就是用 libsumo
-            # output
-            trip_info=trip_info,
-            fcd_output=fcd_output,
+            # output: 空字符串视为不输出, 避免 SUMO 构建空路径输出文件报错
+            trip_info=trip_info or None,
+            fcd_output=fcd_output or None,
         )
 
     def reset(self) -> Dict[str, Any]:

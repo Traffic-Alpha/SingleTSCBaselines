@@ -1,18 +1,12 @@
 '''
 @Author: WANG Maonan
-@Date: 2026-06-01 01:11:07
-@Description: 
-@LastEditTime: 2026-06-02 15:50:48
-'''
-'''
-@Author: WANG Maonan
-@Description: PressLight 环境组装
+@Description: IntelliLight 环境组装（= PressLight，但 reward 换成累计等待时间）
 '''
 import gymnasium as gym
 from stable_baselines3.common.monitor import Monitor
 
 from tsc_env import TSCEnvironment, TSCInfoWrapper, TSCEventWrapper
-from .reward_funcs import pressure_reward
+from .reward_funcs import waiting_time_reward
 from .rl_wrapper import ChooseNextPhaseWrapper
 from .state_funcs import movement_sequence_state, movement_sequence_state_space
 
@@ -29,14 +23,13 @@ def make_env(
     cell_length: float = 15.0,
     num_movements: int = 12,
     history_len: int = 4,
-    reward_time_decay: float = 1.0,
     reward_scale: float = 1.0,
     trip_info: str = "",
     fcd_output: str = "",
     accident_configs=None,
     special_vehicle_configs=None,
 ):
-    """创建 PressLight 环境
+    """创建 IntelliLight 环境
 
     Pipeline: TSCEnvironment -> [TSCEventWrapper] -> TSCInfoWrapper -> ChooseNextPhaseWrapper -> Monitor
 
@@ -63,7 +56,7 @@ def make_env(
         env = TSCInfoWrapper(env, tls_id=tls_id, cell_length=cell_length)
         env = ChooseNextPhaseWrapper(
             env,
-            reward_fn=pressure_reward, # reward 使用 pressure 的设计
+            reward_fn=waiting_time_reward, # reward 使用所有车辆平均累计等待时间(取负)
             state_fn=movement_sequence_state, # state 使用 movement-level tls 特征序列
             state_space=movement_sequence_state_space(
                 num_phases=num_phases,
@@ -77,7 +70,6 @@ def make_env(
             },
             reward_kwargs={
                 'history_len': history_len,
-                'time_decay': reward_time_decay,
             },
         )
         if log_file:

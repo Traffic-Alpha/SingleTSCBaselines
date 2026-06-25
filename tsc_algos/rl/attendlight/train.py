@@ -1,30 +1,37 @@
 '''
 @Author: WANG Maonan
 @Description: AttendLight 训练脚本
-LastEditTime: 2026-04-14 20:40:18
+-> python train.py --junction Beijing_Beihuan --env_name normal_increasing_demand \
+    --num_envs 20 --reward_scale 0.1 --vec_env subproc --history_len 5
+@LastEditTime: 2026-06-24 22:41:26
 '''
-import os
+import sys
 import argparse
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+import os
 import torch
 from loguru import logger
 from tshub.utils.get_abs_path import get_abs_path
 from tshub.utils.init_log import set_logger
 
-from tsc_algos.rl.utils.linear_schedule import linear_schedule
-from tsc_algos.rl.utils.vec_normalize import VecNormalizeCallback
-from tsc_algos.rl.utils.experiment_tracker import TrainingSummaryCallback
 from tsc_algos.output_utils import generate_output_paths
-from .env.make_env import make_env
-from .models.transformer import TransformerJunctionModel
+from tsc_algos.rl.attendlight.attendlight_env.make_env import make_env
+from tsc_algos.rl.attendlight.model import AttendLightMovementTransformer
 from junction_configs import load_junction_config
 
-from stable_baselines3 import PPO
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
+from stable_baselines3 import DQN
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 
 path_convert = get_abs_path(__file__)
 logger.remove()
-set_logger(path_convert('./'), file_log_level="INFO")
+set_logger(path_convert('./'), file_log_level="WARNING", terminal_log_level="WARNING")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='AttendLight 训练')
@@ -36,31 +43,46 @@ if __name__ == '__main__':
                         help='训练总步数')
     parser.add_argument('--seed', type=int, default=1,
                         help='随机种子')
-    parser.add_argument('--num_envs', type=int, default=8,
-                        help='并行环境数量')
     parser.add_argument('--checkpoint_freq', type=int, default=10000,
                         help='checkpoint 保存频率')
     parser.add_argument('--eval_freq', type=int, default=10000,
                         help='deterministic evaluation 频率')
-    parser.add_argument('--reward_scale', type=float, default=1.0,
+    parser.add_argument('--num_envs', type=int, default=1,
+                        help='并行训练环境数量')
+    parser.add_argument('--vec_env', type=str, default='dummy', choices=['dummy', 'subproc'],
+                        help='并行环境类型；沙箱内建议 dummy，本机训练可用 subproc')
+    parser.add_argument('--episode_steps', type=int, default=150,
+                        help='单次仿真大约包含的 RL 交互步数，用于派生 DQN 更新节奏')
+    parser.add_argument('--reward_scale', type=float, default=0.01,
                         help='训练 reward 缩放系数')
+    parser.add_argument('--history_len', type=int, default=4,
+                        help='AttendLight state/reward 使用的历史帧数')
+    parser.add_argument('--reward_time_decay', type=float, default=1.0,
+                        help='pressure reward 时间衰减；1.0 表示历史帧等权')
+    parser.add_argument('--features_dim', type=int, default=128,
+                        help='DQN policy 接收的特征维度')
+    parser.add_argument('--embedding_dim', type=int, default=128,
+                        help='movement token embedding 维度')
+    parser.add_argument('--num_heads', type=int, default=4,
+                        help='Transformer attention heads')
+    parser.add_argument('--num_layers', type=int, default=2,
+                        help='Transformer encoder layers')
+    parser.add_argument('--dim_feedforward', type=int, default=256,
+                        help='Transformer FFN hidden dimension')
+    parser.add_argument('--dropout', type=float, default=0.1,
+                        help='Transformer dropout')
     args = parser.parse_args()
 
     cfg = load_junction_config(args.junction, args.env_name)
 
-    log_path = path_convert('./log/')
-    model_path = path_convert('./models/')
-    tensorboard_path = path_convert('./tensorboard/')
+    log_path = path_convert(f'./log/{args.junction}_{args.env_name}/')
+    model_path = path_convert(f'./checkpoints/{args.junction}_{args.env_name}/')
+    tensorboard_path = path_convert(f'./tensorboard/{args.junction}_{args.env_name}/')
     for p in [log_path, model_path, tensorboard_path]:
         os.makedirs(p, exist_ok=True)
 
-    # 生成 SUMO 输出文件路径
-    trip_info, fcd_output = generate_output_paths(args.junction, args.env_name, "attendlight")
     eval_trip_info, eval_fcd_output = generate_output_paths(args.junction, args.env_name, "attendlight_eval")
 
-    # #########
-    # Init Env
-    # #########
     params = {
         'tls_id': cfg['tls_id'],
         'num_seconds': cfg['num_seconds'],
@@ -70,86 +92,67 @@ if __name__ == '__main__':
         'use_gui': False,
         'log_file': log_path,
         'reward_scale': args.reward_scale,
-        'trip_info': trip_info,
-        'fcd_output': fcd_output,
+        'history_len': args.history_len,
+        'reward_time_decay': args.reward_time_decay,
     }
     env_fns = [make_env(env_index=f'{i}', **params) for i in range(args.num_envs)]
-    env = DummyVecEnv(env_fns) if args.num_envs == 1 else SubprocVecEnv(env_fns)
-    env = VecNormalize(env, norm_obs=False, norm_reward=True)
+    env = SubprocVecEnv(env_fns) if args.vec_env == 'subproc' else DummyVecEnv(env_fns)
 
     eval_params = dict(params)
     eval_params.update({
-        'log_file': path_convert('./eval_log/'),
+        'log_file': log_path,
         'trip_info': eval_trip_info,
         'fcd_output': eval_fcd_output,
     })
     eval_env = DummyVecEnv([make_env(env_index='eval', **eval_params)])
-    eval_env = VecNormalize(eval_env, norm_obs=False, norm_reward=True, training=False)
 
-    # #########
-    # Callback
-    # #########
+    dqn_params = {
+        'learning_rate': 1e-4,
+        'buffer_size': 50000,
+        'learning_starts': max(args.episode_steps * 8, 1000),
+        'batch_size': 64,
+        'train_freq': 4,
+        'gradient_steps': max(args.num_envs, 1),
+        'gamma': 0.99,
+        'exploration_fraction': 0.2,
+        'exploration_final_eps': 0.05,
+        'target_update_interval': max(args.episode_steps * 5, 500),
+    }
+
     checkpoint_callback = CheckpointCallback(
-        save_freq=max(args.checkpoint_freq // args.num_envs, 1),
-        save_path=model_path,
-    )
-    vec_normalize_callback = VecNormalizeCallback(
         save_freq=max(args.checkpoint_freq // args.num_envs, 1),
         save_path=model_path,
     )
     eval_callback = EvalCallback(
         eval_env,
         best_model_save_path=model_path,
-        log_path=path_convert('./eval/'),
+        log_path=log_path,
         eval_freq=max(args.eval_freq // args.num_envs, 1),
-        n_eval_episodes=3,
+        n_eval_episodes=5,
         deterministic=True,
     )
-    summary_callback = TrainingSummaryCallback(
-        summary_path=path_convert('../training_summary.csv'),
-        method='attendlight',
-        junction=args.junction,
-        env_name=args.env_name,
-        total_timesteps=args.total_timesteps,
-        seed=args.seed,
-        eval_npz_path=path_convert('./eval/evaluations.npz'),
-        extra={
-            'trainer': 'PPO',
-            'num_envs': args.num_envs,
-            'vec_env': 'dummy' if args.num_envs == 1 else 'subproc',
-            'reward_scale': args.reward_scale,
-        },
-    )
-    callback_list = CallbackList([checkpoint_callback, vec_normalize_callback, eval_callback, summary_callback])
+    callback_list = CallbackList([checkpoint_callback, eval_callback])
 
-    # #########
-    # Training
-    # #########
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logger.info(f"Using device: {device}")
+    logger.info(f"DQN params: {dqn_params}")
 
     policy_kwargs = dict(
-        features_extractor_class=TransformerJunctionModel,
+        features_extractor_class=AttendLightMovementTransformer,
         features_extractor_kwargs=dict(
-            features_dim=128,
-            num_heads=4,
-            num_layers=2,
-            dim_feedforward=256,
-            dropout=0.1,
+            features_dim=args.features_dim,
+            embedding_dim=args.embedding_dim,
+            num_heads=args.num_heads,
+            num_layers=args.num_layers,
+            dim_feedforward=args.dim_feedforward,
+            dropout=args.dropout,
         ),
     )
 
-    model = PPO(
+    model = DQN(
         "MlpPolicy",
         env,
-        batch_size=128,
-        n_steps=512,
-        n_epochs=10,
-        learning_rate=linear_schedule(3e-4),
-        gamma=0.99,
-        gae_lambda=0.95,
-        clip_range=0.2,
-        ent_coef=0.01,
+        **dqn_params,
         verbose=1,
         policy_kwargs=policy_kwargs,
         tensorboard_log=tensorboard_path,
@@ -158,10 +161,6 @@ if __name__ == '__main__':
     )
     model.learn(total_timesteps=args.total_timesteps, tb_log_name=args.junction, callback=callback_list)
 
-    # #################
-    # 保存 model 和 env
-    # #################
-    env.save(f'{model_path}/last_vec_normalize.pkl')
     model.save(f'{model_path}/last_rl_model.zip')
     print('训练结束, 达到最大步数.')
 

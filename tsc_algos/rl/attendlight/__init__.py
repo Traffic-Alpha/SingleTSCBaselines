@@ -1,4 +1,4 @@
 '''
 @Author: WANG Maonan
-@Description: AttendLight method package
+@Description: AttendLight package
 '''

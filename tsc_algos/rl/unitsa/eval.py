@@ -1,7 +1,8 @@
 '''
 @Author: WANG Maonan
-@Description: IntelliLight 评估脚本
+@Description: UniTSA 评估脚本（PPO 版本）
 -> python eval.py --junction Beijing_Beihuan --env_name normal_increasing_demand --history_len 5 --gui
+@LastEditTime: 2026-06-25 16:18:10
 '''
 import sys
 import argparse
@@ -16,25 +17,25 @@ import torch
 from loguru import logger
 from tshub.utils.get_abs_path import get_abs_path
 
-from stable_baselines3 import DQN
+from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 
 from junction_configs import load_junction_config, load_event_config
-from tsc_algos.rl.intellilight.intellilight_env.make_env import make_env
-from tsc_algos.rl.intellilight.model import IntelliLightMovementModel
+from tsc_algos.rl.unitsa.unitsa_env.make_env import make_env
+from tsc_algos.rl.unitsa.model import UniTSAMovementTransformer
 from tsc_algos.output_utils import generate_output_paths
 
 path_convert = get_abs_path(__file__)
 logger.remove()
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='IntelliLight 评估 (DQN)')
+    parser = argparse.ArgumentParser(description='UniTSA 评估 (PPO)')
     parser.add_argument('--junction', type=str, default='Beijing_Beihuan',
                         help='路口名称')
     parser.add_argument('--env_name', type=str, default='easy_low_density',
                         help='环境名称，如 easy_low_density')
     parser.add_argument('--history_len', type=int, default=5,
-                        help='IntelliLight state/reward 使用的历史帧数，需与训练模型一致')
+                        help='UniTSA state/reward 使用的历史帧数，需与训练模型一致')
     parser.add_argument('--gui', action='store_true', default=False,
                         help='是否开启 SUMO GUI；默认关闭，便于无界面跑出 tripinfo')
     parser.add_argument('--event_name', type=str, default='',
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     cfg = load_junction_config(args.junction, args.env_name)
-    trip_info, fcd_output = generate_output_paths(args.junction, args.env_name, "intellilight")
+    trip_info, fcd_output = generate_output_paths(args.junction, args.env_name, "unitsa")
 
     # 特殊事件配置（来自路口配置文件的 EVENTS 字典）
     accident_configs, special_vehicle_configs = (
@@ -68,8 +69,8 @@ if __name__ == '__main__':
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model_path = path_convert(f'./checkpoints/{args.junction}_{args.env_name}/last_rl_model.zip')
-    _ = IntelliLightMovementModel  # 确保自定义特征提取器类可被 SB3 加载
-    model = DQN.load(model_path, env=env, device=device)
+    _ = UniTSAMovementTransformer  # 确保自定义特征提取器类可被 SB3 加载
+    model = PPO.load(model_path, env=env, device=device)
 
     obs = env.reset()
     dones = False

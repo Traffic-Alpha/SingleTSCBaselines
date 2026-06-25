@@ -1,17 +1,34 @@
 # AttendLight
 
-Status: runnable approximation.
+Status: runnable approximation with an isolated AttendLight environment copy.
 
-Current implementation:
+当前实现：
 
-- Trainer: Stable-Baselines3 PPO.
-- Action: choose next phase.
-- State: lane aggregate features as lane tokens.
-- Reward: waiting time reward.
-- Model: Transformer feature extractor as an attention-based approximation.
+- Trainer: Stable-Baselines3 DQN。
+- Env: 独立的 `attendlight_env`，state/action/reward 设计复制自 PressLight。
+- Action: choose next phase。
+- State: fixed-length movement time series，shape 为 `(history_len, num_movements, movement_feature_dim)`。
+- Reward: weighted time-series movement pressure reward。
+- Model: shared movement-row embedding + movement/time positional embedding + Transformer encoder + CLS token。
 
-Todo for stricter reproduction:
+示例：
 
-- Split the model into road-lane attention and phase attention modules.
-- Support variable lane / phase counts more explicitly.
-- Check the original reward and policy optimization settings.
+```bash
+python tsc_algos/rl/attendlight/train.py \
+  --junction Beijing_Beihuan \
+  --env_name normal_fluctuating_commuter \
+  --num_envs 20 \
+  --reward_scale 0.1 \
+  --vec_env subproc \
+  --history_len 5
+
+python tsc_algos/rl/attendlight/eval.py \
+  --junction Beijing_Beihuan \
+  --env_name normal_fluctuating_commuter \
+  --history_len 5
+```
+
+后续可继续细化：
+
+- 对齐原 AttendLight paper 中更细的 attention 结构。
+- 做短程 sanity run 后调整 attention 层数、embedding 维度和 DQN 超参数。

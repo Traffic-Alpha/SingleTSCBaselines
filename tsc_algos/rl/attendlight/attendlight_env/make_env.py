@@ -6,7 +6,7 @@
 '''
 '''
 @Author: WANG Maonan
-@Description: PressLight 环境组装
+@Description: AttendLight 环境组装
 '''
 import gymnasium as gym
 from stable_baselines3.common.monitor import Monitor
@@ -36,7 +36,7 @@ def make_env(
     accident_configs=None,
     special_vehicle_configs=None,
 ):
-    """创建 PressLight 环境
+    """创建 AttendLight 环境
 
     Pipeline: TSCEnvironment -> [TSCEventWrapper] -> TSCInfoWrapper -> ChooseNextPhaseWrapper -> Monitor
 
