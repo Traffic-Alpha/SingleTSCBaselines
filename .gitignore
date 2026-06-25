@@ -11,15 +11,17 @@ CLAUDE.md
 # sumo output
 *.out.xml
 *.output.xml
-tsc_algos/results/**/fcd_output.xml
-tsc_algos/results/**/trip_info.xml
+tsc_algos/results/**/fcd_output*.xml
+tsc_algos/results/**/trip_info*.xml
+tsc_algos/results/summary.csv
 
 # TensorBoard logs
 **/tensorboard/
 events.out.tfevents*
 
-# Model checkpoints
-tsc_algos/rl/**/models/**/*.zip
+# Model checkpoints (weights / VecNormalize stats) + RL 训练日志，不上传
+tsc_algos/rl/**/checkpoints/
+tsc_algos/rl/**/log/
 
 # 卫星影像（体积过大，不上传）
 *.tif
