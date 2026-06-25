@@ -9,8 +9,8 @@ import os
 from pathlib import Path
 
 def get_project_root() -> Path:
-    """获取项目根目录"""
-    return Path(__file__).resolve().parents[0]
+    """获取仓库根目录 (output_utils.py 位于 <root>/tsc_algos/ 下)"""
+    return Path(__file__).resolve().parents[1]
 
 
 def generate_output_paths(junction: str, env_name: str, algo_name: str) -> tuple:

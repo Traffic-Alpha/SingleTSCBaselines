@@ -34,7 +34,8 @@ METRICS = {
     'waitingTime': 'waiting_time', # 平均等待时间
     'timeLoss': 'time_loss',       # 平均时间损失
 }
-RESULTS_DIR = Path(current_file_path('./'))
+# 仓库根目录下的 results/ (本脚本位于 <root>/scripts/)
+RESULTS_DIR = Path(__file__).resolve().parents[1] / "results"
 
 
 def discover_tripinfos(results_dir: Path):

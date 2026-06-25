@@ -11,9 +11,9 @@ CLAUDE.md
 # sumo output
 *.out.xml
 *.output.xml
-tsc_algos/results/**/fcd_output*.xml
-tsc_algos/results/**/trip_info*.xml
-tsc_algos/results/summary.csv
+results/**/fcd_output*.xml
+results/**/trip_info*.xml
+results/summary.csv
 
 # TensorBoard logs
 **/tensorboard/
