@@ -26,16 +26,19 @@ def movement_avg_accumulated_waiting_time(movement_features: List[Dict[str, Any]
 
 def waiting_time_reward(
     tls_dynamic_features_seq: List[List[Dict[str, Any]]],
-    history_len: int = None,
+    max_cost: float = 300.0,
 ) -> float:
-    """决策间隔内「所有车辆平均累计等待时间」的负值（对各子步等权平均）。"""
+    """取当前决策间隔最后一帧的平均累计等待时间，并返回其负值。
+
+    max_cost 对单步累计等待封顶（默认 300s，与 state 的 MAX_ACCUMULATED_WAITING_TIME
+    一致）。正常/最坏基线策略单步 cost ≤ 151s，封顶只削策略崩溃时的病态长尾值
+    （单步可冲到几百秒），避免极端 reward 撑爆 VecNormalize 的 running std、
+    触发破坏性更新导致 policy collapse。设 max_cost<=0 关闭封顶。
+    """
     if not tls_dynamic_features_seq:
         raise ValueError("UniTSA reward history frames must not be empty.")
 
-    if history_len is None:
-        frames = tls_dynamic_features_seq
-    else:
-        frames = tls_dynamic_features_seq[-max(int(history_len), 1):]
-
-    waits = [movement_avg_accumulated_waiting_time(frame) for frame in frames]
-    return float(-sum(waits) / len(waits))
+    cost = movement_avg_accumulated_waiting_time(tls_dynamic_features_seq[-1])
+    if max_cost and max_cost > 0:
+        cost = min(cost, max_cost)
+    return float(-cost)

@@ -1,9 +1,11 @@
 '''
 @Author: WANG Maonan
-@Description: UniTSA 训练脚本
--> python train.py --junction SouthKorea_Songdo --env_name easy_high_density \
-     --num_envs 20 --reward_scale 0.1 --vec_env subproc --history_len 5 --max_green 50
-@LastEditTime: 2026-07-02 12:44:59
+@Date: 2026-07-01 18:49:01
+@Description: UniTSA training with random traffic scenarios on reset
+-> python train_random_scenarios.py --junction SouthKorea_Songdo --difficulty easy \
+     --num_envs 20 --vec_env subproc --history_len 5 --max_green 50
+@LastEditTime: 2026-07-01 22:11:05
+@LastEditors: WANG Maonan
 '''
 import sys
 import argparse
@@ -20,26 +22,44 @@ from loguru import logger
 from tshub.utils.get_abs_path import get_abs_path
 from tshub.utils.init_log import set_logger
 
-from tsc_algos.output_utils import generate_output_paths
+from tsc_algos.rl.unitsa.unitsa_env.random_scenario_env import make_random_scenario_env
 from tsc_algos.rl.unitsa.unitsa_env.make_env import make_env
 from tsc_algos.rl.unitsa.model import UniTSAMovementTransformer
-from tsc_algos.rl.utils import linear_schedule
 from junction_configs import load_junction_config
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecNormalize
 from stable_baselines3.common.callbacks import CallbackList, CheckpointCallback, EvalCallback
 
+
+DEFAULT_PATTERNS = [
+    'low_density',
+    'high_density',
+    'fluctuating_commuter',
+    'increasing_demand',
+    'random_perturbation',
+]
+
 path_convert = get_abs_path(__file__)
 logger.remove()
 set_logger(path_convert('./'), file_log_level="WARNING", terminal_log_level="WARNING")
 
+
+def parse_patterns(patterns: str):
+    return [p.strip() for p in patterns.split(',') if p.strip()]
+
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='UniTSA 训练 (PPO)')
-    parser.add_argument('--junction', type=str, default='Beijing_Beihuan',
+    parser = argparse.ArgumentParser(description='UniTSA 随机场景训练 (PPO)')
+    parser.add_argument('--junction', type=str, default='SouthKorea_Songdo',
                         help='路口名称')
-    parser.add_argument('--env_name', type=str, default='easy_low_density',
-                        help='环境名称，如 easy_low_density')
+    parser.add_argument('--difficulty', type=str, default='easy',
+                        choices=['easy', 'normal'],
+                        help='路网难度；会组合为 {difficulty}_{pattern}')
+    parser.add_argument('--patterns', type=str, default=','.join(DEFAULT_PATTERNS),
+                        help='逗号分隔的交通流模式，默认 5 种 scenario 全部参与 reset 随机采样')
+    parser.add_argument('--env_group', type=str, default='',
+                        help='输出目录使用的环境组名称；默认 {difficulty}_mixed')
     parser.add_argument('--total_timesteps', type=int, default=300000,
                         help='训练总步数')
     parser.add_argument('--seed', type=int, default=1,
@@ -51,26 +71,15 @@ if __name__ == '__main__':
     parser.add_argument('--num_envs', type=int, default=1,
                         help='并行训练环境数量')
     parser.add_argument('--vec_env', type=str, default='dummy', choices=['dummy', 'subproc'],
-                        help='并行环境类型；沙箱内建议 dummy，本机训练可用 subproc')
+                        help='并行环境类型；多环境训练建议 subproc')
     parser.add_argument('--n_steps', type=int, default=256,
                         help='PPO 每个环境一次 rollout 收集的交互步数')
     parser.add_argument('--batch_size', type=int, default=256,
                         help='PPO 每次梯度更新的 minibatch 大小')
     parser.add_argument('--n_epochs', type=int, default=10,
                         help='PPO 每次 rollout 上重复优化的 epoch 数')
-    parser.add_argument('--learning_rate', type=float, default=1e-4,
-                        help='PPO 初始学习率；配合 --lr_schedule linear 线性衰减到 0')
-    parser.add_argument('--lr_schedule', type=str, default='linear',
-                        choices=['constant', 'linear'],
-                        help='学习率调度：linear 随训练进度线性衰减到 0，防止后期大步更新'
-                             '把已学好的策略推出最优区（policy collapse）')
-    parser.add_argument('--target_kl', type=float, default=0.03,
-                        help='PPO 更新的 KL 早停阈值；单次 rollout 若新旧策略 KL 超过该值'
-                             '则提前停止剩余 epoch，避免一次破坏性更新摧毁策略。设为 0 关闭')
     parser.add_argument('--ent_coef', type=float, default=0.005,
-                        help='PPO 策略熵正则系数（需配合 share_features_extractor=False）。'
-                             '设 0 时确定性策略会间歇塌缩(eval 抖动)；过大(如 0.01)又可能'
-                             '压住本任务较弱的 advantage 信号。0.005 作为熵下限既防塌缩又不压学习。')
+                        help='PPO 策略熵正则系数')
     parser.add_argument('--reward_scale', type=float, default=0.1,
                         help='训练 reward 缩放系数')
     parser.add_argument('--history_len', type=int, default=5,
@@ -91,57 +100,70 @@ if __name__ == '__main__':
                         help='Transformer dropout')
     args = parser.parse_args()
 
-    cfg = load_junction_config(args.junction, args.env_name)
+    if args.vec_env == 'dummy' and args.num_envs > 1:
+        raise ValueError("随机场景多环境训练请使用 --vec_env subproc，避免多个 libsumo 环境共用一个进程。")
 
-    log_path = path_convert(f'./log/{args.junction}_{args.env_name}/')
-    model_path = path_convert(f'./checkpoints/{args.junction}_{args.env_name}/')
-    tensorboard_path = path_convert(f'./tensorboard/{args.junction}_{args.env_name}/')
+    patterns = parse_patterns(args.patterns)
+    env_names = [f'{args.difficulty}_{pattern}' for pattern in patterns]
+    env_group = args.env_group or f'{args.difficulty}_mixed'
+
+    log_path = path_convert(f'./log/{args.junction}_{env_group}/')
+    model_path = path_convert(f'./checkpoints/{args.junction}_{env_group}/')
+    tensorboard_path = path_convert(f'./tensorboard/{args.junction}_{env_group}/')
     for p in [log_path, model_path, tensorboard_path]:
         os.makedirs(p, exist_ok=True)
 
-    eval_trip_info, eval_fcd_output = generate_output_paths(args.junction, args.env_name, "unitsa_eval")
-
-    params = {
-        'tls_id': cfg['tls_id'],
-        'num_seconds': cfg['num_seconds'],
-        'num_phases': cfg['num_phases'],
-        'sumo_cfg': cfg['sumo_cfg'],
-        'net_file': cfg['net_file'],
-        'use_gui': False,
-        'log_file': log_path,
-        'reward_scale': args.reward_scale,
-        'history_len': args.history_len,
-        'max_green': args.max_green,
-    }
-    env_fns = [make_env(env_index=f'{i}', **params) for i in range(args.num_envs)]
+    env_fns = [
+        make_random_scenario_env(
+            junction=args.junction,
+            env_names=env_names,
+            use_gui=False,
+            log_file=log_path,
+            env_index=f'{i}',
+            reward_scale=args.reward_scale,
+            history_len=args.history_len,
+            max_green=args.max_green,
+            seed=args.seed + i,
+        )
+        for i in range(args.num_envs)
+    ]
     env = SubprocVecEnv(env_fns) if args.vec_env == 'subproc' else DummyVecEnv(env_fns)
-    # 仅对 reward 做归一化 (norm_obs=False)，稳定 PPO 的 value/advantage 尺度。
-    # 注意 norm_obs 必须为 False：obs 已在 state_funcs 归一化到 [0,1]，且 Transformer
-    # 用 `obs.abs().sum(-1)==0` 识别 padding，归一化 obs 会破坏该 mask。
     env = VecNormalize(env, norm_obs=False, norm_reward=True, gamma=0.99)
 
-    eval_params = dict(params)
-    eval_params.update({
-        'log_file': log_path,
-        'trip_info': eval_trip_info,
-        'fcd_output': eval_fcd_output,
-    })
-    # eval_env 也必须包成 VecNormalize：当训练 env 是 VecNormalize 时，EvalCallback 会
-    # 调用 sync_envs_normalization(训练env, eval_env)，要求两者同为 VecEnvWrapper，否则
-    # 第一次 eval 直接 AssertionError 崩溃。这里 norm_reward=False + training=False，使
-    # eval reward 仍为原始值、且不更新自身统计量（只接收训练 env 同步过来的统计量）。
-    # 独立的 eval.py 评估脚本不走 EvalCallback，因此无需 VecNormalize。
-    eval_env = DummyVecEnv([make_env(env_index='eval', **eval_params)])
-    eval_env = VecNormalize(eval_env, norm_obs=False, norm_reward=False,
-                            training=False, gamma=0.99)
-
-    learning_rate = (
-        linear_schedule(args.learning_rate)
-        if args.lr_schedule == 'linear'
-        else args.learning_rate
+    # One isolated process per fixed scenario guarantees every evaluation has
+    # exactly the same scenario composition. A random reset with five episodes
+    # covered all five scenarios only 3.84% of the time.
+    eval_env_fns = []
+    for eval_index, env_name in enumerate(env_names):
+        cfg = load_junction_config(args.junction, env_name)
+        eval_env_fns.append(make_env(
+            tls_id=cfg['tls_id'],
+            num_seconds=cfg['num_seconds'],
+            num_phases=cfg['num_phases'],
+            sumo_cfg=cfg['sumo_cfg'],
+            net_file=cfg['net_file'],
+            use_gui=False,
+            log_file=log_path,
+            env_index=f'eval_{eval_index}',
+            reward_scale=args.reward_scale,
+            history_len=args.history_len,
+            max_green=args.max_green,
+        ))
+    eval_env = (
+        SubprocVecEnv(eval_env_fns)
+        if len(eval_env_fns) > 1
+        else DummyVecEnv(eval_env_fns)
     )
+    eval_env = VecNormalize(
+        eval_env,
+        norm_obs=False,
+        norm_reward=False,
+        training=False,
+        gamma=0.99,
+    )
+
     ppo_params = {
-        'learning_rate': learning_rate,
+        'learning_rate': 1e-4,
         'n_steps': args.n_steps,
         'batch_size': args.batch_size,
         'n_epochs': args.n_epochs,
@@ -151,9 +173,6 @@ if __name__ == '__main__':
         'ent_coef': args.ent_coef,
         'vf_coef': 0.5,
         'max_grad_norm': 0.5,
-        # KL 早停：单次 rollout 更新的新旧策略 KL 超过阈值就停止剩余 epoch，
-        # 防止破坏性大更新把已学好的策略推垮（本任务 50k 步达最优后崩溃的主因之一）。
-        'target_kl': args.target_kl if args.target_kl and args.target_kl > 0 else None,
     }
 
     checkpoint_callback = CheckpointCallback(
@@ -162,16 +181,17 @@ if __name__ == '__main__':
     )
     eval_callback = EvalCallback(
         eval_env,
-        best_model_save_path=model_path,
+        best_model_save_path=None,
         log_path=log_path,
         eval_freq=max(args.eval_freq // args.num_envs, 1),
-        n_eval_episodes=5,
+        n_eval_episodes=len(env_names),
         deterministic=True,
     )
     callback_list = CallbackList([checkpoint_callback, eval_callback])
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logger.info(f"Using device: {device}")
+    logger.info(f"Random reset env_names: {env_names}")
     logger.info(f"PPO params: {ppo_params}")
 
     policy_kwargs = dict(
@@ -185,9 +205,6 @@ if __name__ == '__main__':
             dropout=args.dropout,
         ),
         activation_fn=torch.nn.GELU,
-        # actor/critic 各自独立的主干。共享时 value_loss 较大, 会把共享主干的特征
-        # 塑造成"预测状态价值"(与动作无关), 冲掉区分动作的信息, 导致 policy 学不动
-        # (熵贴在均匀分布)。这是 PPO 收敛的决定性配置。
         share_features_extractor=False,
     )
 
@@ -201,11 +218,15 @@ if __name__ == '__main__':
         device=device,
         seed=args.seed,
     )
-    model.learn(total_timesteps=args.total_timesteps, tb_log_name=args.junction, callback=callback_list)
+    model.learn(
+        total_timesteps=args.total_timesteps,
+        tb_log_name=f'{args.junction}_{env_group}',
+        callback=callback_list,
+    )
 
-    model.save(f'{model_path}/{args.junction}_{args.env_name}.zip')
-    env.save(f'{model_path}/vec_normalize.pkl')  # 仅用于复现/续训，eval.py 不需要
-    print('训练结束, 达到最大步数.')
+    model.save(f'{model_path}/{args.junction}_{env_group}.zip')
+    env.save(f'{model_path}/vec_normalize.pkl')
+    print('随机场景训练结束, 达到最大步数.')
 
     env.close()
     eval_env.close()

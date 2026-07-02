@@ -1,8 +1,9 @@
 '''
 @Author: WANG Maonan
-@Description: UniTSA 评估脚本（PPO 版本）
--> python eval.py --junction Beijing_Beihuan --env_name normal_increasing_demand --history_len 5 --gui
-@LastEditTime: 2026-06-26 00:36:42
+@Description: UniTSA 评估脚本
+-> python eval.py --junction SouthKorea_Songdo --env_name easy_high_density \
+    --max_green 45 --history_len 5 --gui
+@LastEditTime: 2026-07-02 12:51:50
 '''
 import sys
 import argparse
@@ -29,7 +30,7 @@ path_convert = get_abs_path(__file__)
 logger.remove()
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='UniTSA 评估 (PPO)')
+    parser = argparse.ArgumentParser(description='UniTSA 评估')
     parser.add_argument('--junction', type=str, default='Beijing_Beihuan',
                         help='路口名称')
     parser.add_argument('--env_name', type=str, default='easy_low_density',
@@ -38,6 +39,8 @@ if __name__ == '__main__':
                         help='UniTSA state/reward 使用的历史帧数，需与训练模型一致')
     parser.add_argument('--gui', action='store_true', default=False,
                         help='是否开启 SUMO GUI；默认关闭，便于无界面跑出 tripinfo')
+    parser.add_argument('--max_green', type=int, default=45,
+                        help='next_or_not 最大连续绿灯时间；设为 0 则关闭保护')
     parser.add_argument('--event_name', type=str, default='',
                         help='特殊事件集合名称（定义在 junction_configs 的 EVENTS 中，如 event_1）；为空则不注入事件')
     args = parser.parse_args()
@@ -58,6 +61,7 @@ if __name__ == '__main__':
         'sumo_cfg': cfg['sumo_cfg'],
         'net_file': cfg['net_file'],
         'use_gui': args.gui,
+        'max_green': args.max_green,
         'log_file': log_path,
         'history_len': args.history_len,
         'trip_info': trip_info,
@@ -68,7 +72,7 @@ if __name__ == '__main__':
     env = DummyVecEnv([make_env(env_index='0', **params)])
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model_path = path_convert(f'./checkpoints/{args.junction}_{args.env_name}/{args.junction}_{args.env_name}.zip')
+    model_path = path_convert(f'./checkpoints/{args.junction}_{args.env_name}/best_model.zip')
     _ = UniTSAMovementTransformer  # 确保自定义特征提取器类可被 SB3 加载
     model = PPO.load(model_path, env=env, device=device)
 

@@ -3,6 +3,12 @@
 UniTSA 是在 [AttendLight](../attendlight) 基础上演进的单路口 TSC 算法。相比 AttendLight，
 做了三处替换（**均已完成**）：
 
+> Mixed-scenario v2：reward 使用决策间隔最后一帧的车辆加权平均累计等待；state 使用
+> 全车道车辆数、E2 queue、累计等待和归一化绿灯计时。Transformer 输出经固定尺度
+> LayerNorm 后进入 GELU policy MLP，避免旧模型中 Tanh 饱和导致的常数动作。该
+> mixed-scenario 流程的训练期评估固定覆盖每个 scenario，正式模型使用训练结束保存的
+> final model，不再选择随机 best；单场景 `eval.py` 仍加载 `best_model.zip`。
+
 | 维度 | AttendLight | UniTSA（最终） |
 |------|-------------|----------------|
 | RL 算法 | DQN | **PPO**（独立特征提取器 + `ent_coef=0.005` + 可选 VecNormalize） |

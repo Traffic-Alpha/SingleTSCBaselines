@@ -23,6 +23,7 @@ def make_env(
     cell_length: float = 15.0,
     num_movements: int = 12,
     history_len: int = 4,
+    max_green: int = 45,
     reward_scale: float = 1.0,
     trip_info: str = "",
     fcd_output: str = "",
@@ -56,7 +57,7 @@ def make_env(
         env = TSCInfoWrapper(env, tls_id=tls_id, cell_length=cell_length)
         env = NextOrNotWrapper(
             env,
-            reward_fn=waiting_time_reward, # reward 使用所有车辆平均等待时间(取负)
+            reward_fn=waiting_time_reward, # reward 使用最后一帧所有车辆平均累计等待时间(取负)
             state_fn=movement_sequence_state, # state 使用 movement-level tls 特征序列
             state_space=movement_sequence_state_space(
                 num_phases=num_phases,
@@ -65,10 +66,8 @@ def make_env(
             ), # 定义 state space 的 shape 和范围
             num_phases=num_phases,
             reward_scale=reward_scale,
+            max_green=max_green,
             state_kwargs={
-                'history_len': history_len,
-            },
-            reward_kwargs={
                 'history_len': history_len,
             },
         )

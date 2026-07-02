@@ -6,7 +6,7 @@ LastEditTime: 2026-04-14 20:40:18
 '''
 import gymnasium as gym
 
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 from tshub.tshub_env.tshub_env import TshubEnvironment
 
 class TSCEnvironment(gym.Env):
@@ -42,6 +42,19 @@ class TSCEnvironment(gym.Env):
     def reset(self) -> Dict[str, Any]:
         state_infos = self.tsc_env.reset()
         return state_infos
+
+    def configure_sumo(
+        self,
+        sumo_cfg: str,
+        net_file: Optional[str] = None,
+        num_seconds: Optional[int] = None,
+    ) -> None:
+        """Update SUMO inputs used by the next reset."""
+        self.tsc_env._sumo_cfg = sumo_cfg
+        if net_file is not None:
+            self.tsc_env._net = net_file
+        if num_seconds is not None:
+            self.tsc_env.sim_max_time = num_seconds
 
     def step(self, action:Dict[str, Dict[str, int]]):
         action = {'tls': action} # 这里只控制 tls 即可

@@ -85,7 +85,10 @@ class UniTSAMovementTransformer(BaseFeaturesExtractor):
             nn.GELU(), # (B, E) -> (B, E)
             nn.Dropout(dropout), # (B, E) -> (B, E)
             nn.Linear(embedding_dim, features_dim), # (B, E) -> (B, D)
-            nn.ReLU(), # (B, D) -> (B, D)
+            # Keep PPO's downstream MLP in a well-conditioned range. The old
+            # unbounded ReLU output saturated almost every default Tanh unit,
+            # reducing the policy to a state-independent constant action.
+            nn.LayerNorm(features_dim, elementwise_affine=False), # (B, D) -> (B, D)
         ) # CLS feature: (B, E) -> (B, D)
 
         self._init_weights()

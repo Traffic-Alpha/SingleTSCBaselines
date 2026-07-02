@@ -2,7 +2,7 @@
 @Author: WANG Maonan
 @Date: 2026-06-02 15:59:09
 @Description: UniTSA movement-based state functions
-@LastEditTime: 2026-06-02 22:04:07
+@LastEditTime: 2026-07-01 17:48:57
 '''
 from typing import Any, Dict, List
 
@@ -10,9 +10,11 @@ import numpy as np
 from gymnasium import spaces
 
 
-MAX_VEHICLES = 10.0
+MAX_VEHICLES = 64.0
+MAX_JAM_VEHICLES = 10.0
 MAX_SPEED = 15.0
-MOVEMENT_BASE_DIM = 9
+MAX_ACCUMULATED_WAITING_TIME = 300.0
+MOVEMENT_BASE_DIM = 11
 
 
 def clip_norm(value: float, scale: float) -> float:
@@ -20,6 +22,14 @@ def clip_norm(value: float, scale: float) -> float:
     if scale <= 0:
         return 0.0
     return float(np.clip(value / scale, 0.0, 1.0))
+
+
+def log_clip_norm(value: float, scale: float) -> float:
+    """Normalize a heavy-tailed non-negative feature to [0, 1]."""
+    if scale <= 0:
+        return 0.0
+    value = max(float(value), 0.0)
+    return float(np.clip(np.log1p(value) / np.log1p(scale), 0.0, 1.0))
 
 
 def phase_multi_hot(phase_indices: List[int], num_phases: int) -> np.ndarray:
@@ -34,6 +44,8 @@ def phase_multi_hot(phase_indices: List[int], num_phases: int) -> np.ndarray:
 def movement_frame_state(
     movement_features: List[Dict[str, Any]],
     num_phases: int,
+    current_green_time: int = 0,
+    max_green: int = 45,
 ) -> np.ndarray:
     """Build one UniTSA movement feature frame.
 
@@ -47,31 +59,42 @@ def movement_frame_state(
         direction_flags = movement['direction_flags']
         phase_binding = phase_multi_hot(movement['phase_indices'], num_phases)
 
-        feature_array[movement_idx, 0] = clip_norm(
-            len(movement['last_step_vehicle_id_list']),
+        # Use the same full-lane cell count that weights the reward. The old
+        # detector count missed roughly 20-35% of vehicles in Songdo and was
+        # clipped in high-density traffic.
+        feature_array[movement_idx, 0] = log_clip_norm(
+            movement['vehicle_count'],
             MAX_VEHICLES,
         )
         feature_array[movement_idx, 1] = clip_norm(
             movement['occupancy'],
             1.0,
-        )
+        ) # 如果都堵车, 这里就会没有区别
         feature_array[movement_idx, 2] = clip_norm(
             movement['mean_speed'],
             MAX_SPEED,
         )
         feature_array[movement_idx, 3] = clip_norm(
             movement['jam_length_vehicle'],
-            MAX_VEHICLES,
-        )
+            MAX_JAM_VEHICLES,
+        ) # E2 detector queue; empirical range is 0-10 vehicles per movement
         feature_array[movement_idx, 4] = float(np.clip(
             movement['movement_lane_number_norm'],
             0.0,
             1.0,
         ))
         feature_array[movement_idx, 5] = float(movement['is_current_phase'])
+        feature_array[movement_idx, 6] = log_clip_norm(
+            movement['avg_accumulated_waiting_time'],
+            MAX_ACCUMULATED_WAITING_TIME,
+        )
 
         direction_cols = min(len(direction_flags), 3)
-        feature_array[movement_idx, 6:6 + direction_cols] = direction_flags[:direction_cols]
+        feature_array[movement_idx, 7:7 + direction_cols] = direction_flags[:direction_cols]
+        feature_array[movement_idx, 10] = clip_norm(
+            current_green_time,
+            max_green,
+        ) if max_green > 0 else 0.0
 
         phase_start = MOVEMENT_BASE_DIM
         feature_array[movement_idx, phase_start:phase_start + num_phases] = phase_binding
@@ -83,6 +106,8 @@ def movement_sequence_state(
     tls_dynamic_features_seq: List[List[Dict[str, Any]]],
     num_phases: int,
     history_len: int = 4,
+    current_green_time: int = 0,
+    max_green: int = 45,
 ) -> np.ndarray:
     """Build a fixed-length UniTSA time series state.
 
@@ -106,7 +131,12 @@ def movement_sequence_state(
 
     start_idx = history_len - len(frames)
     for offset, movement_features in enumerate(frames):
-        frame_state = movement_frame_state(movement_features, num_phases)
+        frame_state = movement_frame_state(
+            movement_features,
+            num_phases,
+            current_green_time=current_green_time,
+            max_green=max_green,
+        )
         expected_shape = (num_movements, feature_dim)
         if frame_state.shape != expected_shape:
             raise ValueError(

@@ -1,7 +1,7 @@
 '''
 Author: WANG Maonan
 Date: 2026-04-13 20:14:19
-@LastEditTime: 2026-06-26 00:26:01
+@LastEditTime: 2026-07-02 16:42:39
 @LastEditors: WANG Maonan
 Description: SOTL (Self-Organizing Traffic Light) 算法实现
   - 维护一个当前相位进口车道的等待车辆累积计数
@@ -26,7 +26,7 @@ class SOTLAgent(BaseTraditionalAgent):
         max_green_steps: 单个相位允许的最大连续绿灯决策步数，超过后强制切换
     """
 
-    def __init__(self, num_phases: int = 4, threshold: int = 5, max_green_steps: int = 12):
+    def __init__(self, num_phases: int = 4, threshold: int = 20, max_green_steps: int = 12):
         self.num_phases = num_phases
         self.threshold = threshold
         self.max_green_steps = max_green_steps

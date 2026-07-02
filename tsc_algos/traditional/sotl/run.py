@@ -1,7 +1,7 @@
 '''
 Author: WANG Maonan
 Date: 2026-04-14 21:22:05
-@LastEditTime: 2026-06-26 00:01:33
+@LastEditTime: 2026-07-02 16:42:54
 @LastEditors: WANG Maonan
 Description: 运行 SOTL 自组织信号灯控制算法
 -> python run.py --junction Beijing_Beihuan --env_name easy_high_density
@@ -32,7 +32,7 @@ if __name__ == '__main__':
                         help='环境名称，如 easy_low_density')
     parser.add_argument('--use_gui', action='store_true', default=False,
                         help='是否开启 GUI')
-    parser.add_argument('--threshold', type=int, default=6,
+    parser.add_argument('--threshold', type=int, default=20,
                         help='SOTL 切换阈值')
     parser.add_argument('--max_green_steps', type=int, default=12,
                         help='单个相位最大连续绿灯决策步数')

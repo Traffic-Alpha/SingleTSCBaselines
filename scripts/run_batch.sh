@@ -15,6 +15,8 @@
 #
 # 用法:
 #   conda activate tshub
+#   # 一个算法测试完毕所有的场景
+#   bash scripts/run_batch.sh --algo fixtime --jobs 10
 #   # fixtime 跑全部 12 路口 x easy/normal x 5 pattern, 注入 event_1, 4 个并行
 #   bash scripts/run_batch.sh --algo fixtime --event_name event_1 --jobs 4
 #   # 只跑部分场景
