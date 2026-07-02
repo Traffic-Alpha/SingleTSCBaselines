@@ -11,6 +11,8 @@ CLAUDE.md
 # sumo output
 *.out.xml
 *.output.xml
+**/testflow.trip.xml
+**/testflow.turndefs.xml
 results/**/fcd_output*.xml
 results/**/trip_info*.xml
 results/summary.csv
